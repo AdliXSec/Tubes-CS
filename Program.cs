@@ -1,6 +1,13 @@
 ﻿using MySql.Data.MySqlClient;
 
-string connectionString = "Server=localhost;Database=anonchat;User Id=root;Password=;";
+string host, db, user, pass;
+
+host = "localhost";
+user = "root";
+pass = "";
+db = "anonchat";
+
+string connectionString = $"Server={host};Database={db};User Id={user};Password={pass};";
 int menu = 0;
 
 MySqlConnection connection = new MySqlConnection(connectionString);
@@ -11,6 +18,7 @@ try
     // Console.WriteLine("Koneksi berhasil!");
     while (true)
     {
+        ClearScreen();
         Menu(menu, connection);
         Console.Write("\n\nLanjutkan? (y/n) > ");
         String? lanjut = Console.ReadLine();
@@ -24,6 +32,11 @@ try
 catch (Exception ex)
 {
     Console.WriteLine($"Terjadi kesalahan: {ex.Message}");
+}
+
+static void ClearScreen()
+{
+    Console.Clear();
 }
 
 static void TampilkanPesan(MySqlConnection connection, string query)
@@ -69,6 +82,7 @@ static void EditPesan(MySqlConnection connection, string query)
     }
 }
 
+
 static void Menu(int menu, MySqlConnection connection)
 {
     Console.WriteLine("\nMenu:");
@@ -76,10 +90,12 @@ static void Menu(int menu, MySqlConnection connection)
     menu = Convert.ToInt32(Console.ReadLine());
     if (menu == 1)
     {
+        ClearScreen();
         TampilkanPesan(connection, "SELECT * FROM message");
     }
     else if (menu == 2)
     {
+        ClearScreen();
         Console.Write("Untuk Siapa Pesan Ini > ");
         string? to_msg = Console.ReadLine();
         Console.Write("Masukkan Pesan > ");
@@ -88,12 +104,14 @@ static void Menu(int menu, MySqlConnection connection)
     }
     else if (menu == 3)
     {
+        ClearScreen();
         Console.Write("Masukkan IDUnik > ");
         string? id_msg = Console.ReadLine();
         HapusPesan(connection, $"DELETE FROM message WHERE id_msg = {id_msg};");
     }
     else if (menu == 4)
     {
+        ClearScreen();
         Console.Write("Masukkan IDUnik > ");
         string? id_msg = Console.ReadLine();
         Console.Write("Untuk Siapa Pesan Ini > ");
@@ -110,11 +128,13 @@ static void Menu(int menu, MySqlConnection connection)
     }
     else if (menu == 5)
     {
+        ClearScreen();
         Console.WriteLine("Terima kasih telah menggunakan program ini!");
         Environment.Exit(0);
     }
     else
     {
+        ClearScreen();
         Console.WriteLine("Pilihan tidak valid!");
     }
 }
