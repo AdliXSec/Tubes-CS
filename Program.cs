@@ -1,11 +1,13 @@
 ﻿using MySql.Data.MySqlClient;
+using System.Security.Cryptography;
+using System.Text;
 
 string host, db, user, pass;
 
 host = "localhost";
 user = "root";
 pass = "";
-db = "anonchat";
+db = "tubescs";
 
 string connectionString = $"Server={host};Database={db};User Id={user};Password={pass};";
 int menu = 0;
@@ -19,7 +21,7 @@ try
     while (true)
     {
         ClearScreen();
-        Menu(menu, connection);
+        Login(menu, connection);
         Console.Write("\n\nLanjutkan? (y/n) > ");
         String? lanjut = Console.ReadLine();
         if (lanjut == "n" || lanjut == "N")
@@ -37,6 +39,16 @@ catch (Exception ex)
 static void ClearScreen()
 {
     Console.Clear();
+}
+
+static string HashPassword(string password)
+{
+    using (SHA256 sha256 = SHA256.Create())
+    {
+        byte[] bytes = Encoding.UTF8.GetBytes(password);
+        byte[] hash = sha256.ComputeHash(bytes);
+        return Convert.ToHexString(hash);
+    }
 }
 
 static void TampilkanPesan(MySqlConnection connection, string query)
@@ -136,5 +148,55 @@ static void Menu(int menu, MySqlConnection connection)
     {
         ClearScreen();
         Console.WriteLine("Pilihan tidak valid!");
+    }
+}
+
+static void Login(int menu, MySqlConnection connection)
+{
+    Console.Write("Masukkan Username: ");
+    String? username = Console.ReadLine();
+    Console.Write("Masukkan Password: ");
+    String? password = Console.ReadLine();
+
+
+    string passwordhash = HashPassword(password);
+    using (MySqlCommand command = new MySqlCommand($"SELECT * FROM user WHERE email_user = '{username}' AND password_user = '{passwordhash}'", connection))
+    using (MySqlDataReader reader = command.ExecuteReader())
+    {
+        if (reader.Read())
+        {
+            Menu(menu, connection);
+        }
+        else
+        {
+            Console.WriteLine("\nLogin Gagal!");
+        }
+    }
+}
+
+static void Register(MySqlConnection connection)
+{
+    Console.Write("Masukkan Username: ");
+    String? username = Console.ReadLine();
+    Console.Write("Masukkan Password: ");
+    String? password = Console.ReadLine();
+    Console.Write("Masukkan Email: ");
+    String? email = Console.ReadLine();
+    string passwordhash = HashPassword(password);
+    using (MySqlCommand command = new MySqlCommand($"SELECT * FROM user WHERE email_user = '{email}'", connection))
+    using (MySqlDataReader reader = command.ExecuteReader())
+    {
+        if (reader.Read())
+        {
+            Console.WriteLine("\nEmail sudah terdaftar!");
+        }
+        else
+        {
+            using (MySqlCommand commandRegister = new MySqlCommand($"INSERT INTO user (email_user, password_user) VALUES ('{email}', '{passwordhash}')", connection))
+            {
+                commandRegister.ExecuteNonQuery();
+                Console.WriteLine("\nRegister Berhasil!");
+            }
+        }
     }
 }
