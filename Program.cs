@@ -1,4 +1,6 @@
 ﻿using MySql.Data.MySqlClient;
+using Org.BouncyCastle.Security;
+using System.Net.NetworkInformation;
 using System.Security.Cryptography;
 using System.Text;
 
@@ -21,11 +23,12 @@ try
     while (true)
     {
         ClearScreen();
-        Login(menu, connection);
+        firstMenu(menu, connection);
         Console.Write("\n\nLanjutkan? (y/n) > ");
         String? lanjut = Console.ReadLine();
         if (lanjut == "n" || lanjut == "N")
         {
+            Console.WriteLine("Terima kasih telah menggunakan program ini!");
             break;
         }
     }
@@ -153,50 +156,96 @@ static void Menu(int menu, MySqlConnection connection)
 
 static void Login(int menu, MySqlConnection connection)
 {
-    Console.Write("Masukkan Username: ");
+    Console.Write("Masukkan email: ");
     String? username = Console.ReadLine();
     Console.Write("Masukkan Password: ");
     String? password = Console.ReadLine();
 
 
-    string passwordhash = HashPassword(password);
+    string passwordhash = HashPassword(password ?? "");
     using (MySqlCommand command = new MySqlCommand($"SELECT * FROM user WHERE email_user = '{username}' AND password_user = '{passwordhash}'", connection))
     using (MySqlDataReader reader = command.ExecuteReader())
-    {
+
         if (reader.Read())
         {
-            Menu(menu, connection);
         }
         else
         {
             Console.WriteLine("\nLogin Gagal!");
+            return;
+        }
+    while (true)
+    {
+        ClearScreen();
+        Menu(menu, connection);
+        Console.Write("\n\nLanjutkan? (y/n) > ");
+        String? lanjut = Console.ReadLine();
+        if (lanjut == "n" || lanjut == "N")
+        {
+            break;
         }
     }
+
 }
 
 static void Register(MySqlConnection connection)
 {
     Console.Write("Masukkan Username: ");
     String? username = Console.ReadLine();
-    Console.Write("Masukkan Password: ");
-    String? password = Console.ReadLine();
     Console.Write("Masukkan Email: ");
     String? email = Console.ReadLine();
-    string passwordhash = HashPassword(password);
+    Console.Write("Masukkan Password: ");
+    String? password = Console.ReadLine();
+    string passwordhash = HashPassword(password ?? "");
     using (MySqlCommand command = new MySqlCommand($"SELECT * FROM user WHERE email_user = '{email}'", connection))
     using (MySqlDataReader reader = command.ExecuteReader())
-    {
-        if (reader.Read())
+
+        if (!reader.Read())
         {
-            Console.WriteLine("\nEmail sudah terdaftar!");
         }
         else
         {
-            using (MySqlCommand commandRegister = new MySqlCommand($"INSERT INTO user (email_user, password_user) VALUES ('{email}', '{passwordhash}')", connection))
-            {
-                commandRegister.ExecuteNonQuery();
-                Console.WriteLine("\nRegister Berhasil!");
-            }
+            Console.WriteLine("\nEmail sudah terdaftar!");
+            return;
         }
+    addDataRegister(connection, $"INSERT INTO user (name_user, email_user, password_user) VALUES ('{username}', '{email}', '{passwordhash}');");
+
+
+}
+
+static void addDataRegister(MySqlConnection connection, string query)
+{
+    using (MySqlCommand command = new MySqlCommand(query, connection))
+    {
+        command.ExecuteNonQuery();
+        Console.WriteLine("\nData berhasil ditambahkan!");
+    }
+}
+
+static void firstMenu(int menu, MySqlConnection connection)
+{
+    Console.WriteLine("\nMenu:");
+    Console.Write("1. Login\n2. Register\n3. Keluar\n\nMasukkan pilihan > ");
+    menu = Convert.ToInt32(Console.ReadLine());
+    if (menu == 1)
+    {
+        ClearScreen();
+        Login(menu, connection);
+    }
+    else if (menu == 2)
+    {
+        ClearScreen();
+        Register(connection);
+    }
+    else if (menu == 3)
+    {
+        ClearScreen();
+        Console.WriteLine("Terima kasih telah menggunakan program ini!");
+        Environment.Exit(0);
+    }
+    else
+    {
+        ClearScreen();
+        Console.WriteLine("Pilihan tidak valid!");
     }
 }
